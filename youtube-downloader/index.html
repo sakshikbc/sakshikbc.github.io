@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube MP4 Downloader</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: "#ef4444",
+          },
+        },
+      },
+    };
+  </script>
+</head>
+
+<body class="bg-slate-50 min-h-screen flex items-center justify-center px-4">
+
+<div class="w-full max-w-xl">
+
+  <!-- Header -->
+  <div class="text-center mb-10">
+    <h1 class="text-4xl font-bold text-slate-900 mb-3">
+      YouTube MP4 Downloader
+    </h1>
+    <p class="text-slate-600 text-lg">
+      Download YouTube videos directly to your device in MP4 format.
+    </p>
+  </div>
+
+  <!-- Card -->
+  <div class="bg-white rounded-2xl shadow-xl p-8">
+
+    <!-- Form -->
+    <form id="form" class="space-y-5">
+      <input
+        type="url"
+        id="url"
+        required
+        placeholder="Paste YouTube video URL"
+        class="w-full border border-slate-300 rounded-xl px-4 py-3
+               focus:outline-none focus:ring-2 focus:ring-brand"
+      />
+
+      <select
+        id="quality"
+        class="w-full border border-slate-300 rounded-xl px-4 py-3
+               focus:outline-none focus:ring-2 focus:ring-brand"
+      >
+        <option value="360">MP4 – 360p (Fast)</option>
+        <option value="720">MP4 – 720p (HD)</option>
+        <option value="best">MP4 – Best Quality</option>
+      </select>
+
+      <button
+        type="submit"
+        class="w-full bg-brand hover:bg-red-600 text-white font-semibold
+               py-3 rounded-xl transition shadow-md"
+      >
+        Prepare Download
+      </button>
+    </form>
+
+    <!-- Loading -->
+    <div id="loading" class="hidden text-center mt-8">
+      <div
+        class="mx-auto h-12 w-12 border-4 border-brand border-t-transparent
+               rounded-full animate-spin"
+      ></div>
+      <p class="mt-4 text-slate-600 text-sm">
+        Preparing your video… Please wait
+      </p>
+    </div>
+
+  </div>
+
+  <p class="text-center text-xs text-slate-400 mt-6">
+    Files are prepared temporarily and auto-deleted after download.
+  </p>
+</div>
+
+<script>
+const API = "https://youtube-downloader-r8lp.onrender.com"; 
+// const API = "http://127.0.0.1:8000";
+
+
+// ⬆️ change to localhost when testing locally
+
+const form = document.getElementById("form");
+const loading = document.getElementById("loading");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  form.classList.add("hidden");
+  loading.classList.remove("hidden");
+
+  const fd = new FormData();
+  fd.append("url", url.value);
+  fd.append("quality", quality.value);
+
+  try {
+    const res = await fetch(`${API}/prepare/mp4`, {
+      method: "POST",
+      body: fd,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Server error");
+    }
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.error || "Preparation failed");
+    }
+
+    // ✅ REDIRECT HAPPENS HERE
+    window.location.href =
+      `success.html?id=${data.file_id}&name=${encodeURIComponent(data.filename)}`;
+
+  } catch (err) {
+    alert("❌ Failed to prepare video.\n\n" + err.message);
+    location.reload();
+  }
+});
+</script>
+
+</body>
+</html>
